@@ -20,7 +20,7 @@ It covers core concepts such as models, views, templates, URL routing, forms, au
 - View movie details
 - Create, update, and delete movies (CRUD)
 - Write and delete reviews
-- User authentication (login / logout)
+- User authentication (Sign up / login / login with github / logout)
 - Static files support (CSS, images)
 
 ---
