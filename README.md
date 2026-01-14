@@ -39,8 +39,8 @@ It covers core concepts such as models, views, templates, URL routing, forms, au
 ## Project Structure
 
 django-Movie_Review-project/
-├── manage.py
-├── movie/ # Main application (models, views, templates, static files)
-├── mysite/ # Project settings and URLs
-└── .gitignore
+- manage.py
+- movie/ # Main application (models, views, templates, static files)
+- mysite/ # Project settings and URLs
+- .gitignore
 
