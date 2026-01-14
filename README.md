@@ -3,7 +3,7 @@
 A web-based movie review application developed using Django.  
 Users can browse movies, view details, and write reviews.
 
-🔗 Live Demo: https://<ใส่ลิงก์-pythonanywhere-ของคุณ>
+🔗 Live Demo: https://paloyhii.pythonanywhere.com/movie/
 
 ---
 
