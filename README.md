@@ -1,7 +1,7 @@
 # Django Movie Review Project
 
 A web-based movie review application developed using Django.  
-Users can browse movies, view details, and write reviews.
+Anyone can access the website to add movies, write reviews, leave comments, and rate movies with stars.
 
 🔗 Live Demo: https://paloyhii.pythonanywhere.com/movie/
 
