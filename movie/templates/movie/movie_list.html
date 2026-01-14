@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+
+{% block title %}Movies | PopcornHub{% endblock %}
+
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+/>
+<style>
+    .search-container {
+        background-color: var(--darker-bg);
+        padding: 30px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .search-form input {
+        background-color: var(--card-bg);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+    .search-form input::placeholder {
+        color: var(--light-text);
+    }
+
+    .search-form input:focus {
+        background-color: var(--card-bg);
+        color: #fff;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(0, 192, 48, 0.25);
+    }
+
+    .section-header {
+        color: #fff;
+        font-weight: 600;
+        margin: 30px 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .rating-overlay {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background-color: rgba(0,0,0,0.7);
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .movie-title {
+        font-size: 0.9rem;
+        margin-top: 8px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .movie-year {
+        font-size: 0.8rem;
+        color: var(--light-text);
+    }
+
+    .letterboxd-filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .filter-pill {
+        background-color: var(--card-bg);
+        color: var(--light-text);
+        border-radius: 20px;
+        padding: 5px 15px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .filter-pill:hover, .filter-pill.active {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+
+    /* New styles for the movie list table */
+    .movie-list-section {
+        margin-top: 50px;
+        padding-top: 30px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .movie-list-table {
+        width: 100%;
+        background-color: var(--card-bg);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .movie-list-table thead {
+        background-color: var(--darker-bg);
+    }
+
+    .movie-list-table th {
+        padding: 12px 15px;
+        color: var(--light-text);
+        font-weight: 500;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .movie-list-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        color: #fff;
+    }
+
+    .movie-list-table tr:hover {
+        background-color: rgba(255,255,255,0.05);
+    }
+
+    .movie-list-table .poster-thumbnail {
+        width: 40px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+
+    .sort-button {
+        background: none;
+        border: none;
+        color: var(--light-text);
+        cursor: pointer;
+        padding: 0;
+        margin-left: 5px;
+    }
+
+    .sort-button:hover {
+        color: var(--primary-color);
+    }
+
+    .sort-button.active {
+        color: var(--primary-color);
+    }
+
+    .sort-options {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+
+    .sort-options select {
+        background-color: var(--card-bg);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 4px;
+        padding: 5px 10px;
+        margin-left: 10px;
+    }
+
+    .empty-table-message {
+        text-align: center;
+        padding: 30px;
+        color: var(--light-text);
+    }
+
+    .table-actions {
+        white-space: nowrap;
+    }
+
+    .view-button {
+        color: var(--primary-color);
+        margin-right: 10px;
+    }
+    .swiper {
+    padding: 20px 0;
+    }
+
+    .swiper-slide {
+    max-width: 250px;
+    }
+
+    .poster-card {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: var(--card-bg);
+      display: flex;
+      flex-direction: column;
+    }
+    .swiper-button-next,
+    .swiper-button-prev {
+      color: white;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <div class="container">
+        <form method="GET" action="" class="search-form">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control"
+                placeholder="Search for a movie..." value="{{ request.GET.search }}">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div class="section-header">
+        <h2>Popular Movies</h2>
+        <div class="letterboxd-filters">
+            <a href="{% url 'movie:movie_list' %}?filter=all" class="filter-pill {% if request.GET.filter == 'all' %}active{% endif %}">All</a>
+            <a href="{% url 'movie:movie_list' %}?filter=recent" class="filter-pill {% if request.GET.filter == 'recent' %}active{% endif %}">Recent</a>
+            <a href="{% url 'movie:movie_list' %}?filter=popular" class="filter-pill {% if request.GET.filter == 'popular' %}active{% endif %}">Popular</a>
+            <a href="{% url 'movie:movie_list' %}?filter=top_rated" class="filter-pill {% if request.GET.filter == 'top_rated' %}active{% endif %}">Top Rated</a>
+        </div>
+    </div>
+
+
+<!-- Swiper Slider -->
+<div class="swiper mySwiper">
+  <div class="swiper-wrapper">
+    {% for movie in movie_list %}
+    <div class="swiper-slide">
+      <div class="movie-item">
+        <div class="poster-card">
+          {% if movie.picture %}
+          <img src="{{ movie.picture.url }}" alt="{{ movie.title }}" class="poster-image">
+          {% else %}
+          <div class="no-picture-placeholder d-flex justify-content-center align-items-center"
+                style="height: 100%; background-color: var(--card-bg);">
+            <i class="fas fa-film fa-2x text-muted"></i>
+          </div>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+          <div class="rating-overlay">
+            <div class="fav-buttons">
+              <a href="#" onclick="favPost('{% url 'movie:movie_unfavorite' movie.id %}',
+                        {{ movie.id }}); return false;" id="favorite_star_{{ movie.id }}"
+                        {% if movie.id not in favorites %} style="display: none;" {% endif %}>
+                <i class="fa-solid fa-star text-warning"></i>
+              </a>
+              <a href="#" onclick="favPost('{% url 'movie:movie_favorite' movie.id %}',
+                        {{ movie.id }}); return false;" id="unfavorite_star_{{ movie.id }}"
+                        {% if movie.id in favorites %} style="display: none;" {% endif %}>
+                <i class="fa-regular fa-star text-secondary"></i>
+              </a>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="poster-overlay">
+            <a href="{% url 'movie:movie_detail' movie.id %}"
+                class="btn btn-sm btn-outline-secondary w-100">View Details</a>
+          </div>
+        </div>
+        <a href="{% url 'movie:movie_detail' movie.id %}"
+            class="text-white text-decoration-none">
+          <h5 class="movie-title">{{ movie.title }}</h5>
+          <div class="movie-year">{{ movie.release_year }}</div>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Swiper Navigation -->
+  <div class="swiper-button-next"></div>
+  <div class="swiper-button-prev"></div>
+</div>
+
+
+    <!-- New Complete Movie List Section -->
+    <div class="movie-list-section">
+        <div class="section-header">
+            <h2>Movie List</h2>
+            <div class="sort-options">
+                <span>Sort by:</span>
+                <select id="sortSelect">
+                    <option value="title-asc">Title (A-Z)</option>
+                    <option value="title-desc">Title (Z-A)</option>
+                    <option value="year-desc">Year (Newest)</option>
+                    <option value="year-asc">Year (Oldest)</option>
+                    <option value="rating-desc">Rating (High-Low)</option>
+                    <option value="rating-asc">Rating (Low-High)</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="table-responsive">
+            <table class="movie-list-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;"></th>
+                        <th>
+                            Title
+                        </th>
+                        <th>
+                            Year
+                        </th>
+                        <th class="text-center">Genre</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="movieListBody">
+                    {% if movie_list %}
+                        {% for movie in movie_list %}
+                        <tr>
+                            <td>
+                                {% if movie.picture %}
+                                <img src="{{ movie.picture.url }}" alt="{{ movie.title }}" class="poster-thumbnail">
+                                {% else %}
+                                <div class="no-picture-placeholder d-flex justify-content-center align-items-center" style="width: 40px; height: 60px; background-color: var(--card-bg);">
+                                    <i class="fas fa-film text-muted"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ movie.title }}</td>
+                            <td>{{ movie.release_year }}</td>
+                            <td class="text-center">
+                                {% if movie.genres.all %}
+                                    {{ movie.genres.all|join:", " }}
+                                {% else %}
+                                    No Genre
+                                {% endif %}
+                            </td>
+                            <td class="table-actions">
+                                <a href="{% url 'movie:movie_detail' movie.id %}" class="view-button">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                {% if user.is_authenticated %}
+                                <a href="#" class="favorite-toggle"
+                                    data-movie-id="{{ movie.id }}"
+                                    data-is-favorite="{% if movie.id in favorites %}true{% else %}false{% endif %}"
+                                    onclick="toggleFavorite(this); return false;">
+                                    <i class="{% if movie.id in favorites %}fa-solid{% else %}fa-regular{% endif %} fa-star"></i>
+                                </a>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-table-message">No movies found</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if movie_list %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not movie_list.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ movie_list.previous_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Previous" {% if not movie_list.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}>
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% for page_num in movie_list.paginator.page_range %}
+            <li class="page-item {% if movie_list.number == page_num %}active{% endif %}">
+                <a class="page-link" href="?page={{ page_num }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if not movie_list.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ movie_list.next_page_number }}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" aria-label="Next" {% if not movie_list.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+// Toggle display for favorites
+function toggleInlineDisplay(star_id) {
+    const elem = document.getElementById(star_id);
+    if (elem.style.display === "none") {
+        elem.style.display = "inline";
+    } else {
+        elem.style.display = "none";
+    }
+}
+
+// Handle favorite/unfavorite actions
+function favPost(url, movie_id) {
+    fetch(url, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: '{}'
+    }).then(() => {
+        toggleInlineDisplay("favorite_star_" + movie_id);
+        toggleInlineDisplay("unfavorite_star_" + movie_id);
+
+        // Also update in the table view if present
+        const tableButton = document.querySelector(`.favorite-toggle[data-movie-id="${movie_id}"]`);
+        if (tableButton) {
+            const isFavorite = tableButton.getAttribute('data-is-favorite') === 'true';
+            tableButton.setAttribute('data-is-favorite', !isFavorite);
+            tableButton.querySelector('i').className = isFavorite ? 'fa-regular fa-star' : 'fa-solid fa-star';
+        }
+    }).catch((error) => {
+        alert("Error: " + error);
+    });
+}
+
+
+function toggleFavorite(button) {
+    const movieId = button.getAttribute('data-movie-id');
+    const isFavorite = button.getAttribute('data-is-favorite') === 'true';
+
+    // Build the appropriate URL based on favorite status
+    let url;
+    if (isFavorite) {
+        url = '{% url "movie:movie_unfavorite" 999 %}'.replace('999', movieId);
+    } else {
+        url = '{% url "movie:movie_favorite" 999 %}'.replace('999', movieId);
+    }
+
+    console.log(`Toggling favorite: Movie ID ${movieId}, currently favorite: ${isFavorite}`);
+
+    favPost(url, movieId);
+}
+
+
+
+// Handle filter pills for movie categories
+document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const filter = pill.getAttribute('data-filter');
+        const currentUrl = new URL(window.location.href);
+
+        if (filter === 'all') {
+            currentUrl.searchParams.delete('filter');
+        } else {
+            currentUrl.searchParams.set('filter', filter);
+        }
+
+        window.location.href = currentUrl.toString();
+    });
+});
+
+// Direct sorting functionality
+document.getElementById('sortSelect').addEventListener('change', function() {
+    const sortValue = this.value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('sort', sortValue);
+    window.location.href = currentUrl.toString();
+});
+
+// Add click handlers for sort buttons
+document.querySelectorAll('.sort-button').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+        const sortValue = this.getAttribute('data-sort');
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('sort', sortValue);
+        window.location.href = currentUrl.toString();
+    });
+});
+
+// Initialize active sort button and dropdown based on URL
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sortParam = urlParams.get('sort') || 'title-asc';
+    const filterParam = urlParams.get('filter') || 'all';
+
+    // Set active sort in dropdown
+    document.getElementById('sortSelect').value = sortParam;
+
+    // Highlight active sort button
+    document.querySelectorAll('.sort-button').forEach(btn => {
+        if (btn.getAttribute('data-sort') === sortParam) {
+            btn.classList.add('active');
+        }
+    });
+
+    // Highlight active filter pill
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+        if (pill.getAttribute('data-filter') === filterParam) {
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+        }
+    });
+});
+
+  const swiper = new Swiper(".mySwiper", {
+    slidesPerView: 5,
+    spaceBetween: 20,
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    },
+    loop: true,
+    breakpoints: {
+      1440: { slidesPerView: 5 },
+    },
+  });
+</script>
+{% endblock %}
+
+
+
+
+
+
+

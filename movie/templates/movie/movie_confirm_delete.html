@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm" style="background-color: #14181c; color: #fff;">
+                <div class="card-body p-4">
+                    <h3 class="text-center mb-4" style="font-weight: 300; letter-spacing: 0.5px;">
+                        Are you sure you want to delete
+                    </h3>
+                    <h2 class="text-center mb-4" style="font-weight: 500; color: #ff8000;">
+                        "{{ movie.title }}"?
+                    </h2>
+                    
+                    <div class="movie-details p-3 mb-4" style="background-color: #1d2124; border-radius: 6px;">
+                        <div class="row">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <p class="mb-1" style="color: #aaa; font-size: 0.9rem;">DIRECTOR</p>
+                                <p class="mb-3" style="font-weight: 500;">{{ movie.director }}</p>
+                                
+                                <p class="mb-1" style="color: #aaa; font-size: 0.9rem;">RELEASE YEAR</p>
+                                <p class="mb-0" style="font-weight: 500;">{{ movie.release_year }}</p>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="mb-1" style="color: #aaa; font-size: 0.9rem;">GENRES</p>
+                                <p class="mb-3">
+                                    {% if genres %}
+                                        {% for genre in genres %}
+                                            <span style="display: inline-block; border-radius: 3px; background-color: #2c3440; color: #cbd1d8; padding: 3px 8px; margin: 0 4px 4px 0; font-size: 0.85rem;">
+                                                {{ genre }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span style="color: #aaa;">No genres listed</span>
+                                    {% endif %}
+                                </p>
+                                
+                                <p class="mb-1" style="color: #aaa; font-size: 0.9rem;">DESCRIPTION</p>
+                                <p class="mb-0" style="font-size: 0.95rem; line-height: 1.5;">{{ movie.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn px-4 py-2 me-2" style="background-color: #ff6000; color: #fff; border: none; font-weight: 500;">
+                                Delete
+                            </button>
+                            <a href="{% url 'movie:movie_detail' movie.id %}" class="btn px-4 py-2" style="background-color: #2c3440; color: #fff; border: none; font-weight: 500;">
+                                Cancel
+                            </a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

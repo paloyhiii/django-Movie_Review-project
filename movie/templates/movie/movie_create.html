@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Movie{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Letterboxd Style Form */
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 30px;
+        color: #fff;
+        border-bottom: 1px solid var(--card-bg);
+        padding-bottom: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--light-text);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 12px 15px;
+        background-color: var(--card-bg);
+        border: 1px solid var(--hover-bg);
+        border-radius: 4px;
+        color: #fff;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(0, 192, 48, 0.2);
+    }
+
+    textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .btn-group {
+        display: flex;
+        margin-top: 30px;
+    }
+
+    .poster-upload {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .poster-preview {
+        width: 150px;
+        height: 225px;
+        background-color: var(--card-bg);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .poster-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+    }
+
+    .poster-icon {
+        font-size: 48px;
+        color: var(--light-text);
+    }
+
+    .upload-container {
+        flex-grow: 1;
+    }
+
+    .upload-btn {
+        background-color: var(--card-bg);
+        border: 1px dashed var(--hover-bg);
+        padding: 15px;
+        border-radius: 4px;
+        font-size: 14px;
+        text-align: center;
+        cursor: pointer;
+        display: block;
+        color: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .upload-btn:hover {
+        background-color: var(--hover-bg);
+    }
+
+    .upload-btn i {
+        margin-right: 8px;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .tags-input {
+        background-color: var(--card-bg);
+        border: 1px solid var(--hover-bg);
+        border-radius: 4px;
+        padding: 6px 12px;
+        min-height: 46px;
+    }
+
+    .tags-input ul {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .tags-input li {
+        display: flex;
+        align-items: center;
+        margin: 4px;
+        padding: 4px 8px;
+        background-color: var(--hover-bg);
+        border-radius: 30px;
+        font-size: 14px;
+    }
+
+    .tags-input li span {
+        margin-right: 8px;
+    }
+
+    .tags-input li i {
+        font-size: 12px;
+        cursor: pointer;
+        color: var(--light-text);
+    }
+
+    .tags-input input {
+        flex-grow: 1;
+        border: none;
+        background: transparent;
+        outline: none;
+        color: #fff;
+        font-size: 16px;
+        padding: 6px 4px;
+        min-width: 80px;
+    }
+
+    .error-message {
+        color: #ff6b6b;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    .genre-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        opacity: 1;
+    }
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Add a New Movie</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group poster-upload">
+            <div class="poster-preview" id="poster-preview">
+                <i class="fas fa-film poster-icon"></i>
+            </div>
+            <div class="upload-container">
+                <label for="{{ form.picture.id_for_label }}" class="upload-btn">
+                    <i class="fas fa-upload"></i> Upload Movie Poster
+                </label>
+                <input type="file" id="{{ form.picture.id_for_label }}" name="{{ form.picture.name }}" accept="image/*" onchange="previewImage(this)">
+                <small style="display:block; margin-top:8px; color:var(--light-text);">Recommended: 2:3 ratio (e.g., 1000×1500 pixels)</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            <input type="text" id="{{ form.title.id_for_label }}" name="{{ form.title.name }}" placeholder="Enter movie title" value="{{ form.title.value|default:'' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.release_year.id_for_label }}">Release Year</label>
+            <input type="number" id="{{ form.release_year.id_for_label }}" name="{{ form.release_year.name }}" placeholder="YYYY" min="1888" max="2030" value="{{ form.release_year.value|default:'' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.director_name.id_for_label }}">Director</label>
+            <input type="text" id="{{ form.director_name.id_for_label }}" name="{{ form.director_name.name }}" placeholder="Enter director's name" value="{{ form.director_name.value|default:'' }}">
+        </div>
+        <div>
+            <label for="{{ form.genres.id_for_label }}">{{ form.genres.label }}</label>
+            {{ form.genres }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.actors.id_for_label }}">{{ form.actors.label }}</label>
+            <div class="tags-input" id="actors-wrapper">
+                <input type="text"
+                       name="{{ form.actors.name }}"
+                       id="{{ form.actors.id_for_label }}"
+                       class="form-control border-0 p-0 text-white"
+                       style="box-shadow: none; height: auto; background-color: transparent; "
+                       placeholder="Add actors (press Enter)"
+                       value="{{ form.actors.value|default_if_none:'' }}">
+            </div>
+        </div>
+        <style>
+
+            #{{ form.actors.id_for_label }}::placeholder {
+                color: rgba(255, 255, 255, 0.6);
+                opacity: 1;
+            }
+        </style>
+
+
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            <textarea id="{{ form.description.id_for_label }}" name="{{ form.description.name }}" placeholder="Enter a brief description of the movie">{{ form.description.value|default:'' }}</textarea>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Save Movie</button>
+            {% if form.instance.id %}
+                <button type="button" class="btn btn-outline-secondary ml-2" onclick="window.location.href='{% url 'movie:movie_detail' form.instance.id %}'">Cancel</button>
+            {% else %}
+                <a href="{% url 'movie:movie_list' %}" class="btn btn-outline-secondary ml-2">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preview image when uploaded
+    function previewImage(input) {
+        const preview = document.getElementById('poster-preview');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Movie Poster">`;
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Tags input for genres and actors
+    function setupTagsInput(inputId, tagsId, hiddenId) {
+        const input = document.getElementById(inputId);
+        const tagsContainer = document.getElementById(tagsId);
+        const hiddenInput = document.getElementById(hiddenId);
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = input.value.trim();
+
+                if (value) {
+                    // Create new tag
+                    const ul = tagsContainer.querySelector('ul');
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${value}</span><i class="fas fa-times" onclick="removeTag(this, '${inputId.split('-')[0]}')"></i>`;
+                    ul.appendChild(li);
+
+                    // Update hidden input
+                    updateHiddenInput(inputId.split('-')[0]);
+
+                    // Clear input
+                    input.value = '';
+                }
+            }
+        });
+    }
+
+    function removeTag(element, type) {
+        element.parentElement.remove();
+        updateHiddenInput(type);
+    }
+
+    function updateHiddenInput(type) {
+        const tags = document.querySelectorAll(`#${type}-tags ul li span`);
+        const values = Array.from(tags).map(tag => tag.textContent);
+        document.getElementById(`${type}-hidden`).value = values.join(',');
+    }
+
+    // Initialize tags inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        setupTagsInput('genres-input', 'genres-tags', 'genres-hidden');
+        setupTagsInput('actors-input', 'actors-tags', 'actors-hidden');
+    });
+</script>
+{% endblock %}
+
+
+
+
+
+

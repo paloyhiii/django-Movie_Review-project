@@ -1,0 +1,505 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ movie.title }} ({{ movie.release_year }}) • PopcornHub{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Letterboxd Style Detail Page */
+    .movie-header {
+        position: relative;
+        margin-bottom: 40px;
+    }
+
+    .movie-backdrop {
+        height: 350px;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .backdrop-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(20,24,28,0.5) 0%, var(--dark-bg) 100%);
+        z-index: 1;
+    }
+
+    .movie-content {
+        position: relative;
+        z-index: 2;
+        margin-top: -150px;
+    }
+
+    .poster-container {
+        width: 230px;
+        position: relative;
+    }
+
+    .poster-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 5px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        background-color: var(--card-bg);
+    }
+
+    .poster-img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .no-poster {
+        aspect-ratio: 2/3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--card-bg);
+        color: var(--light-text);
+    }
+
+    .no-poster i {
+        font-size: 3rem;
+    }
+
+    .movie-info-container {
+        padding-left: 30px;
+    }
+
+    .movie-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+        line-height: 1.2;
+    }
+
+    .release-year {
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: var(--light-text);
+        margin-bottom: 1rem;
+    }
+
+    .movie-meta {
+        margin-bottom: 1.5rem;
+        color: var(--light-text);
+        font-size: 0.95rem;
+    }
+
+    .meta-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .meta-label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.2rem;
+        color: #fff;
+    }
+
+    .genre-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        background-color: var(--card-bg);
+        border-radius: 30px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-size: 0.8rem;
+        transition: background-color 0.2s;
+    }
+
+    .genre-tag:hover {
+        background-color: var(--hover-bg);
+    }
+
+    .movie-actions {
+        margin-top: 1.5rem;
+    }
+
+    .movie-description {
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Comments Section */
+    .comments-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .review-card {
+        background-color: var(--card-bg);
+        border: none;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .review-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--hover-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .review-user-info {
+        flex-grow: 1;
+    }
+
+    .review-username {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .review-date {
+        font-size: 0.8rem;
+        color: var(--light-text);
+    }
+
+    .review-content {
+        padding: 16px;
+    }
+
+    .review-text {
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+
+    .star-rating {
+        margin-bottom: 12px;
+    }
+
+    .star-rating .star {
+        color: #445566;
+        font-size: 1.2rem;
+        margin-right: 2px;
+    }
+
+    .star-rating .star.selected,
+    .star-rating .star.hovered {
+        color: #ff8000;
+    }
+
+    .review-actions {
+        padding-top: 12px;
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .review-action-btn {
+        background: none;
+        border: none;
+        color: var(--light-text);
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .review-action-btn:hover {
+        background-color: var(--hover-bg);
+        color: #fff;
+    }
+
+    .review-action-btn.delete:hover {
+        color: #ff6b6b;
+    }
+
+    /* Comment Form */
+    .comment-form {
+        background-color: var(--card-bg);
+        border-radius: 6px;
+        padding: 20px;
+        margin-top: 2rem;
+    }
+
+    .comment-form-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .comment-textarea {
+        background-color: var(--hover-bg);
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 1rem;
+        padding: 12px;
+        margin-bottom: 1rem;
+        resize: vertical;
+    }
+
+    .comment-textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 192, 48, 0.2);
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: var(--primary-color);
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .submit-btn:hover {
+        background-color: #00a028;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 767px) {
+        .movie-content {
+            margin-top: -80px;
+        }
+
+        .poster-container {
+            width: 140px;
+            margin: 0 auto 20px auto;
+        }
+
+        .movie-info-container {
+            padding-left: 0;
+            text-align: center;
+        }
+
+        .movie-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Movie Header with Backdrop Effect -->
+<section class="movie-header">
+    <div class="movie-backdrop">
+        {% if movie.picture %}
+        <img src="{{ movie.picture.url }}" class="w-100 h-100 object-cover" style="object-position: center 20%; filter: blur(8px);" alt="">
+        {% else %}
+        <div class="w-100 h-100" style="background-color: var(--card-bg);"></div>
+        {% endif %}
+        <div class="backdrop-overlay"></div>
+    </div>
+
+    <div class="container movie-content">
+        <div class="row">
+            <!-- Movie Poster -->
+            <div class="col-md-3 col-sm-4">
+                <div class="poster-container">
+                    <div class="poster-wrapper">
+                        {% if movie.picture %}
+                        <img src="{{ movie.picture.url }}" class="poster-img" alt="{{ movie.title }}">
+                        {% else %}
+                        <div class="no-poster">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Movie Info -->
+            <div class="col-md-9 col-sm-8">
+                <div class="movie-info-container">
+                    <h1 class="movie-title">{{ movie.title }}</h1>
+                    <div class="release-year">{{ movie.release_year }}</div>
+
+                    <div class="movie-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Director</span>
+                            {{ movie.director }}
+                        </div>
+
+                        <div class="meta-item">
+                            <span class="meta-label">Cast</span>
+                            {{ movie.actors }}
+                        </div>
+
+                        <div class="meta-item">
+                            <span class="meta-label">Genres</span>
+                            <div class="genre-tags">
+                                {% if genres %}
+                                    {% for genre in genres %}
+                                        <span class="genre-tag">{{ genre }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span>No Genre</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if user == movie.owner %}
+                    <div class="movie-actions">
+                        <a href="{% url 'movie:movie_update' movie.id %}"
+                            class="btn btn-primary btn-sm">Edit</a>
+                        <a href="{% url 'movie:movie_delete' movie.id %}"
+                            class="btn btn-outline-danger btn-sm ml-2">Delete</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container">
+    <!-- Movie Description -->
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="movie-description">
+                {{ movie.description }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="comments-section">
+                <h2 class="section-title">Comments</h2>
+
+                {% if reviews %}
+                    <div class="review-list">
+                        {% for review in reviews %}
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <div class="user-avatar">
+                                        {{ review.owner.username|first }}
+                                    </div>
+                                    <div class="review-user-info">
+                                        <div class="review-username">{{ review.owner.username }}</div>
+                                        <div class="review-date">{{ review.created_at|naturaltime }}</div>
+                                    </div>
+                                </div>
+                                <div class="review-content">
+                                    <div class="review-text">{{ review.text }}</div>
+                                    <div class="star-rating">
+                                        {% for i in "12345"|make_list %}
+                                            <span class="star {% if review.rating >= forloop.counter %}selected{% endif %}">&#9733;</span>
+                                        {% endfor %}
+                                    </div>
+
+                                    {% if user == review.owner %}
+                                    <div class="review-actions">
+                                        <a href="{% url 'movie:review_delete' review.id %}" class="review-action-btn delete">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No comments yet. Be the first to comment!</p>
+                {% endif %}
+
+                <!-- Comment Form -->
+                {% if user.is_authenticated %}
+                    <div class="comment-form">
+                        <h3 class="comment-form-title">Add Your Comment</h3>
+                        <form method="POST" action="{% url 'movie:review_create' movie.id %}">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <textarea name="text" class="form-control comment-textarea" rows="4" placeholder="Write your thoughts about this movie..." required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="d-block mb-2">Your Rating</label>
+                                <div class="star-rating">
+                                    <input type="hidden" name="rating" id="ratingInput" value="0">
+                                    {% for i in "12345"|make_list %}
+                                        <span class="star" data-value="{{ forloop.counter }}">&#9733;</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <button type="submit" class="submit-btn">Post Comment</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="comment-form">
+                        <p class="text-center my-4">
+                            You must <a href="/accounts/login/?next={{ request.path }}">Login</a> to post a comment.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const stars = document.querySelectorAll('form .star-rating .star');
+    const ratingInput = document.getElementById('ratingInput');
+
+    stars.forEach((star, index) => {
+        star.addEventListener('mouseover', () => {
+            stars.forEach((s, i) => {
+                s.classList.toggle('hovered', i <= index);
+            });
+        });
+
+        star.addEventListener('mouseout', () => {
+            stars.forEach(s => s.classList.remove('hovered'));
+        });
+
+        star.addEventListener('click', () => {
+            ratingInput.value = index + 1;
+            stars.forEach((s, i) => {
+                s.classList.toggle('selected', i <= index);
+            });
+        });
+    });
+
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const ratingValue = parseInt(ratingInput.value);
+        if (ratingValue < 1 || ratingValue > 5) {
+            e.preventDefault();
+            alert("Please select a star rating before submitting.");
+        }
+    });
+});
+</script>
+{% endblock %}
+
+
